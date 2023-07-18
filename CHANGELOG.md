@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Authority`: Removed deployment files and script.
 - `History`: Removed deployment files and script.
 
+### Changed
+
+- Encode outputs with `abi.encodeWithSignature`
+
 ### Removed
 
 - `rollups-cli` package
