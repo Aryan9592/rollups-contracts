@@ -6,6 +6,8 @@ pragma solidity ^0.8.8;
 import {ICartesiDApp, Proof} from "./ICartesiDApp.sol";
 import {IConsensus} from "../consensus/IConsensus.sol";
 import {LibOutputValidation, OutputValidityProof} from "../library/LibOutputValidation.sol";
+import {OutputEncoding} from "../common/OutputEncoding.sol";
+
 import {Bitmask} from "@cartesi/util/contracts/Bitmask.sol";
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -121,7 +123,10 @@ contract CartesiDApp is
         );
 
         // reverts if proof isn't valid
-        _proof.validity.validateVoucher(_destination, _payload, epochHash);
+        _proof.validity.validateOutput(
+            OutputEncoding.encodeVoucher(_destination, _payload),
+            epochHash
+        );
 
         uint256 voucherPosition = LibOutputValidation.getBitMaskPosition(
             _proof.validity.outputIndexWithinInput,
@@ -181,7 +186,10 @@ contract CartesiDApp is
         );
 
         // reverts if proof isn't valid
-        _proof.validity.validateNotice(_notice, epochHash);
+        _proof.validity.validateOutput(
+            OutputEncoding.encodeNotice(_notice),
+            epochHash
+        );
 
         return true;
     }

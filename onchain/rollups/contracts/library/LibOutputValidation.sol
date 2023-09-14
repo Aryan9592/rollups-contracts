@@ -5,7 +5,6 @@ pragma solidity ^0.8.8;
 
 import {CanonicalMachine} from "../common/CanonicalMachine.sol";
 import {MerkleV2} from "@cartesi/util/contracts/MerkleV2.sol";
-import {OutputEncoding} from "../common/OutputEncoding.sol";
 
 /// @param inputIndexWithinEpoch Which input, inside the epoch, the output belongs to (G)
 /// @param outputIndexWithinInput Index of output emitted by the input (D)
@@ -210,36 +209,6 @@ library LibOutputValidation {
         ) {
             revert IncorrectOutputHashesRootHash();
         }
-    }
-
-    /// @notice Make sure the output proof is valid, otherwise revert.
-    /// @param v The output validity proof (D..J)
-    /// @param destination The address that will receive the payload through a message call
-    /// @param payload The payload, which—in the case of Solidity contracts—encodes a function call
-    /// @param epochHash The hash of the epoch in which the output was generated (K)
-    function validateVoucher(
-        OutputValidityProof calldata v,
-        address destination,
-        bytes calldata payload,
-        bytes32 epochHash
-    ) internal pure {
-        validateOutput(
-            v,
-            OutputEncoding.encodeVoucher(destination, payload),
-            epochHash
-        );
-    }
-
-    /// @notice Make sure the output proof is valid, otherwise revert.
-    /// @param v The output validity proof (D..J)
-    /// @param notice The notice
-    /// @param epochHash The hash of the epoch in which the output was generated (K)
-    function validateNotice(
-        OutputValidityProof calldata v,
-        bytes calldata notice,
-        bytes32 epochHash
-    ) internal pure {
-        validateOutput(v, OutputEncoding.encodeNotice(notice), epochHash);
     }
 
     /// @notice Get the position of a voucher on the bit mask.
