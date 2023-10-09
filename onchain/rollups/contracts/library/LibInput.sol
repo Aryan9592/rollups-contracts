@@ -12,36 +12,57 @@ library LibInput {
     /// @notice Raised when input is larger than the machine limit.
     error InputSizeExceedsLimit();
 
+    /// @notice Encode an EVM input
+    /// @param sender `msg.sender`
+    /// @param blockNumber `block.number`
+    /// @param blockTimestamp `block.timestamp`
+    /// @param index The index of the input in the input box
+    /// @param payload The input payload
+    /// @return The encoded EVM input
+    function encodeEvmInput(
+        address sender,
+        uint256 blockNumber,
+        uint256 blockTimestamp,
+        uint256 index,
+        bytes calldata payload
+    ) internal pure returns (bytes memory) {
+        return
+            abi.encodeWithSignature(
+                "EvmInput(address,uint256,uint256,uint256,bytes)",
+                sender,
+                blockNumber,
+                blockTimestamp,
+                index,
+                payload
+            );
+    }
+
     /// @notice Summarize input data in a single hash.
     /// @param sender `msg.sender`
     /// @param blockNumber `block.number`
     /// @param blockTimestamp `block.timestamp`
-    /// @param input The input blob
     /// @param inputIndex The index of the input in the input box
-    /// @return The input hash
-    function computeInputHash(
+    /// @param input The input payload
+    /// @return The EVM input hash
+    function computeEvmInputHash(
         address sender,
         uint256 blockNumber,
         uint256 blockTimestamp,
-        bytes calldata input,
-        uint256 inputIndex
+        uint256 inputIndex,
+        bytes calldata input
     ) internal pure returns (bytes32) {
-        if (input.length > CanonicalMachine.INPUT_MAX_SIZE) {
+        bytes memory inputBlob = encodeEvmInput(
+            sender,
+            blockNumber,
+            blockTimestamp,
+            inputIndex,
+            input
+        );
+
+        if (inputBlob.length > CanonicalMachine.INPUT_MAX_SIZE) {
             revert InputSizeExceedsLimit();
         }
 
-        bytes32 keccakMetadata = keccak256(
-            abi.encode(
-                sender,
-                blockNumber,
-                blockTimestamp,
-                0, //TODO decide how to deal with epoch index
-                inputIndex // input index in the input box
-            )
-        );
-
-        bytes32 keccakInput = keccak256(input);
-
-        return keccak256(abi.encode(keccakMetadata, keccakInput));
+        return keccak256(inputBlob);
     }
 }

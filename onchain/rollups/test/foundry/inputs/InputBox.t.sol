@@ -98,12 +98,12 @@ contract InputBoxHandler is Test {
         );
 
         // Compute the input hash from the arguments passed to `addInput`
-        bytes32 computedInputHash = LibInput.computeInputHash(
+        bytes32 computedInputHash = LibInput.computeEvmInputHash(
             msg.sender,
             block.number,
             block.timestamp,
-            _input,
-            index
+            index,
+            _input
         );
 
         // Check if the input hash matches the computed one
@@ -158,13 +158,30 @@ contract InputBoxTest is Test {
         assertEq(inputBox.getNumberOfInputs(_dapp), 0);
     }
 
+    function getMaxInputPayloadLength() internal returns (uint256) {
+        LibInputCaller libInputCaller = new LibInputCaller();
+        bytes memory blob = libInputCaller.encodeEvmInput(
+            address(0),
+            0,
+            0,
+            0,
+            new bytes(32)
+        );
+        // number of bytes in input blob excluding input payload
+        uint256 extraBytes = blob.length - 32;
+        // because it's abi encoded, input payloads are stored as multiples of 32 bytes
+        return ((CanonicalMachine.INPUT_MAX_SIZE - extraBytes) / 32) * 32;
+    }
+
     function testAddLargeInput() public {
         address dapp = vm.addr(1);
 
-        inputBox.addInput(dapp, new bytes(CanonicalMachine.INPUT_MAX_SIZE));
+        uint256 maxLength = getMaxInputPayloadLength();
+
+        inputBox.addInput(dapp, new bytes(maxLength));
 
         vm.expectRevert(LibInput.InputSizeExceedsLimit.selector);
-        inputBox.addInput(dapp, new bytes(CanonicalMachine.INPUT_MAX_SIZE + 1));
+        inputBox.addInput(dapp, new bytes(maxLength + 1));
     }
 
     // fuzz testing with multiple inputs
@@ -175,7 +192,7 @@ contract InputBoxTest is Test {
 
         // assume #bytes for each input is within bounds
         for (uint256 i; i < numInputs; ++i) {
-            vm.assume(_inputs[i].length <= CanonicalMachine.INPUT_MAX_SIZE);
+            vm.assume(_inputs[i].length <= getMaxInputPayloadLength());
         }
 
         // adding inputs
@@ -199,12 +216,12 @@ contract InputBoxTest is Test {
         // testing added inputs
         for (uint256 i; i < numInputs; ++i) {
             // compute input hash for each input
-            bytes32 inputHash = LibInput.computeInputHash(
+            bytes32 inputHash = LibInput.computeEvmInputHash(
                 address(this),
                 i, // block.number
                 i + year2022, // block.timestamp
-                _inputs[i],
-                i // inputBox.length
+                i, // inputBox.length
+                _inputs[i]
             );
             // test if input hash is the same as in InputBox
             assertEq(inputHash, inputBox.getInputHash(_dapp, i));
@@ -252,5 +269,24 @@ contract InputBoxTest is Test {
             sum += actual;
         }
         assertEq(sum, totalNumOfInputs, "total number of inputs");
+    }
+}
+
+contract LibInputCaller {
+    function encodeEvmInput(
+        address sender,
+        uint256 blockNumber,
+        uint256 blockTimestamp,
+        uint256 index,
+        bytes calldata payload
+    ) public pure returns (bytes memory) {
+        return
+            LibInput.encodeEvmInput(
+                sender,
+                blockNumber,
+                blockTimestamp,
+                index,
+                payload
+            );
     }
 }

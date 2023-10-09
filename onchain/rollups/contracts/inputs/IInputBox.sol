@@ -9,7 +9,7 @@ interface IInputBox {
     /// @param dapp The address of the DApp
     /// @param inputIndex The index of the input in the input box
     /// @param sender The address that sent the input
-    /// @param input The contents of the input
+    /// @param input The input payload
     /// @dev MUST be triggered on a successful call to `addInput`.
     event InputAdded(
         address indexed dapp,
@@ -20,7 +20,7 @@ interface IInputBox {
 
     /// @notice Add an input to a DApp's input box.
     /// @param _dapp The address of the DApp
-    /// @param _input The contents of the input
+    /// @param _input The input payload
     /// @return The hash of the input plus some extra metadata
     /// @dev MUST fire an `InputAdded` event accordingly.
     ///      Input larger than machine limit will raise `InputSizeExceedsLimit` error.

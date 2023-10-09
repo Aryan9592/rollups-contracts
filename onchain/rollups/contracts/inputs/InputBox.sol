@@ -8,12 +8,12 @@ import {LibInput} from "../library/LibInput.sol";
 
 /// @title Input Box
 ///
-/// @notice Trustless and permissionless contract that receives arbitrary blobs
-/// (called "inputs") from anyone and adds a compound hash to an append-only list
+/// @notice Trustless and permissionless contract that receives arbitrary
+/// data from anyone and adds a compound hash to an append-only list
 /// (called "input box"). Each DApp has its own input box.
 ///
-/// The hash that is stored on-chain is composed by the hash of the input blob,
-/// the block number and timestamp, the input sender address, and the input index.
+/// The input hash is composed by the input payload, the block number and timestamp,
+/// the address of the input sender, and the index of the input.
 ///
 /// Data availability is guaranteed by the emission of `InputAdded` events
 /// on every successful call to `addInput`. This ensures that inputs can be
@@ -34,12 +34,12 @@ contract InputBox is IInputBox {
         bytes32[] storage inputBox = inputBoxes[_dapp];
         uint256 inputIndex = inputBox.length;
 
-        bytes32 inputHash = LibInput.computeInputHash(
+        bytes32 inputHash = LibInput.computeEvmInputHash(
             msg.sender,
             block.number,
             block.timestamp,
-            _input,
-            inputIndex
+            inputIndex,
+            _input
         );
 
         // add input to the input box
