@@ -41,28 +41,28 @@ library LibInput {
     /// @param sender `msg.sender`
     /// @param blockNumber `block.number`
     /// @param blockTimestamp `block.timestamp`
-    /// @param inputIndex The index of the input in the input box
-    /// @param input The input payload
+    /// @param index The index of the input in the input box
+    /// @param payload The input payload
     /// @return The EVM input hash
     function computeEvmInputHash(
         address sender,
         uint256 blockNumber,
         uint256 blockTimestamp,
-        uint256 inputIndex,
-        bytes calldata input
+        uint256 index,
+        bytes calldata payload
     ) internal pure returns (bytes32) {
-        bytes memory inputBlob = encodeEvmInput(
+        bytes memory input = encodeEvmInput(
             sender,
             blockNumber,
             blockTimestamp,
-            inputIndex,
-            input
+            index,
+            payload
         );
 
-        if (inputBlob.length > CanonicalMachine.INPUT_MAX_SIZE) {
+        if (input.length > CanonicalMachine.INPUT_MAX_SIZE) {
             revert InputSizeExceedsLimit();
         }
 
-        return keccak256(inputBlob);
+        return keccak256(input);
     }
 }

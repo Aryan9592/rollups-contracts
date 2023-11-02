@@ -29,24 +29,24 @@ contract InputBox is IInputBox {
 
     function addInput(
         address _dapp,
-        bytes calldata _input
+        bytes calldata _payload
     ) external override returns (bytes32) {
         bytes32[] storage inputBox = inputBoxes[_dapp];
-        uint256 inputIndex = inputBox.length;
+        uint256 index = inputBox.length;
 
         bytes32 inputHash = LibInput.computeEvmInputHash(
             msg.sender,
             block.number,
             block.timestamp,
-            inputIndex,
-            _input
+            index,
+            _payload
         );
 
         // add input to the input box
         inputBox.push(inputHash);
 
         // block.number and timestamp can be retrieved by the event metadata itself
-        emit InputAdded(_dapp, inputIndex, msg.sender, _input);
+        emit InputAdded(_dapp, index, msg.sender, _payload);
 
         return inputHash;
     }
