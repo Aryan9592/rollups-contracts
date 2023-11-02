@@ -10,7 +10,7 @@ import {CartesiDApp} from "contracts/dapp/CartesiDApp.sol";
 import {Proof} from "contracts/dapp/ICartesiDApp.sol";
 import {IConsensus} from "contracts/consensus/IConsensus.sol";
 import {OutputValidityProof, LibOutputValidation} from "contracts/library/LibOutputValidation.sol";
-import {OutputEncoding} from "contracts/common/OutputEncoding.sol";
+import {Outputs} from "contracts/common/Outputs.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -723,16 +723,19 @@ contract CartesiDAppTest is TestBase {
     }
 
     function encodeVoucher(
-        Voucher calldata voucher
-    ) external pure returns (bytes memory) {
+        Voucher memory voucher
+    ) internal pure returns (bytes memory) {
         return
-            OutputEncoding.encodeVoucher(voucher.destination, voucher.payload);
+            abi.encodeCall(
+                Outputs.Voucher,
+                (voucher.destination, voucher.payload)
+            );
     }
 
     function encodeNotice(
-        bytes calldata notice
-    ) external pure returns (bytes memory) {
-        return OutputEncoding.encodeNotice(notice);
+        bytes memory notice
+    ) internal pure returns (bytes memory) {
+        return abi.encodeCall(Outputs.Notice, (notice));
     }
 
     function writeInputs() internal {
@@ -740,10 +743,10 @@ contract CartesiDAppTest is TestBase {
             LibServerManager.OutputEnum outputEnum = outputEnums[i];
             if (outputEnum == LibServerManager.OutputEnum.VOUCHER) {
                 Voucher memory voucher = getVoucher(i);
-                writeInput(i, noticeSender, this.encodeVoucher(voucher));
+                writeInput(i, noticeSender, encodeVoucher(voucher));
             } else {
                 bytes memory notice = getNotice(i);
-                writeInput(i, noticeSender, this.encodeNotice(notice));
+                writeInput(i, noticeSender, encodeNotice(notice));
             }
         }
     }
@@ -829,14 +832,14 @@ contract CartesiDAppTest is TestBase {
         bytes memory notice,
         Proof memory proof
     ) internal view returns (bool) {
-        return dapp.validateNotice(notice, proof);
+        return dapp.validateNotice(encodeNotice(notice), proof);
     }
 
     function executeVoucher(
         Voucher memory voucher,
         Proof memory proof
     ) internal returns (bool) {
-        return dapp.executeVoucher(voucher.destination, voucher.payload, proof);
+        return dapp.executeVoucher(encodeVoucher(voucher), proof);
     }
 
     function calculateEpochHash(
