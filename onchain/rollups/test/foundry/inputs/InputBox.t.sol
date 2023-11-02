@@ -158,21 +158,6 @@ contract InputBoxTest is Test {
         assertEq(inputBox.getNumberOfInputs(_dapp), 0);
     }
 
-    function getMaxInputPayloadLength() internal returns (uint256) {
-        LibInputCaller libInputCaller = new LibInputCaller();
-        bytes memory blob = libInputCaller.encodeEvmInput(
-            address(0),
-            0,
-            0,
-            0,
-            new bytes(32)
-        );
-        // number of bytes in input blob excluding input payload
-        uint256 extraBytes = blob.length - 32;
-        // because it's abi encoded, input payloads are stored as multiples of 32 bytes
-        return ((CanonicalMachine.INPUT_MAX_SIZE - extraBytes) / 32) * 32;
-    }
-
     function testAddLargeInput() public {
         address dapp = vm.addr(1);
 
@@ -270,9 +255,21 @@ contract InputBoxTest is Test {
         }
         assertEq(sum, totalNumOfInputs, "total number of inputs");
     }
-}
 
-contract LibInputCaller {
+    function getMaxInputPayloadLength() internal returns (uint256) {
+        bytes memory blob = this.encodeEvmInput(
+            address(0),
+            0,
+            0,
+            0,
+            new bytes(32)
+        );
+        // number of bytes in input blob excluding input payload
+        uint256 extraBytes = blob.length - 32;
+        // because it's abi encoded, input payloads are stored as multiples of 32 bytes
+        return ((CanonicalMachine.INPUT_MAX_SIZE - extraBytes) / 32) * 32;
+    }
+
     function encodeEvmInput(
         address sender,
         uint256 blockNumber,
