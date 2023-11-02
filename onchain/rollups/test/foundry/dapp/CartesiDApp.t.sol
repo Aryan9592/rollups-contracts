@@ -847,7 +847,7 @@ contract CartesiDAppTest is TestBase {
     ) internal pure returns (bytes32) {
         return
             keccak256(
-                abi.encodePacked(
+                abi.encode(
                     _validity.outputsEpochRootHash,
                     _validity.machineStateHash
                 )
